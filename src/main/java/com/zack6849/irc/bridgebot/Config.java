@@ -1,4 +1,6 @@
-/* This program is free software: you can redistribute it and/or modify
+/*
+ * 
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -10,8 +12,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
-
+    
 package com.zack6849.irc.bridgebot;
 
 import java.io.BufferedReader;
@@ -24,6 +27,8 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -38,6 +43,7 @@ public class Config
     private String nickservPassword;
     private String botNickname;
     private String botIdent;
+    private String botPrefix;
     private String serverHostname;
     private String serverPassword;
     private List<String> channels;
@@ -46,9 +52,11 @@ public class Config
     private int messageDelay;
     private boolean debug;
 
-    public void load() throws IOException
+    public void load()
     {
-        config_file = new File("bot.properties");
+        try{
+         config_file = new File(App.app.getDataFolder(), "bot.properties");
+        App.app.getDataFolder().mkdir();
         System.out.println(config_file.exists());
         if (!config_file.exists())
         {
@@ -73,18 +81,25 @@ public class Config
         setServerHostname(getConfig().getProperty("SERVER-HOST"));
         setBotIdent(getConfig().getProperty("BOT-IDENT"));
         setBotNickname(getConfig().getProperty("BOT-NICKNAME"));
+        setBotPrefix(getConfig().getProperty("BOT-PREFIX"));
         setNickservAccount(getConfig().getProperty("NICKSERV-ACCOUNT"));
         setNickservPassword(getConfig().getProperty("NICKSERV-PASSWORD"));
         setChannels(Arrays.asList(getConfig().getProperty("BOT-CHANNELS").split(" ")));
         setAdmins(Arrays.asList(getConfig().getProperty("BOT-ADMINS").split(" ")));
         setMessageDelay((int) Integer.valueOf(getConfig().getProperty("BOT-MESSAGE-DELAY")));
         setServerPort((int) Integer.valueOf(getConfig().getProperty("SERVER-PORT")));
-        setDebug((boolean) Boolean.valueOf(getConfig().getProperty("DEBUG")));
+        setDebug((boolean) Boolean.valueOf(getConfig().getProperty("DEBUG")));   
+        }catch(Exception ex){
+          ex.printStackTrace();
+        }
     }
-    /* +-----------------------------------------------------------------------------+
+    /* 
+     * 
+     * +-----------------------------------------------------------------------------+
      * |    All code below this is auto-generated and fairly pointless to read,      |
      * |            but feel free to waste your time reading it.                     |
      * +-----------------------------------------------------------------------------+
+     * 
      */
     
     /**
@@ -293,5 +308,48 @@ public class Config
     public void setDebug(boolean debug)
     {
         this.debug = debug;
+    }
+
+    /**
+     * @return the botPrefix
+     */
+    public String getBotPrefix()
+    {
+        return botPrefix;
+    }
+
+    /**
+     * @param botPrefix the botPrefix to set
+     */
+    public void setBotPrefix(String botPrefix)
+    {
+        this.botPrefix = botPrefix;
+    }
+    
+     public boolean isAdmin(String username, String hostmask)
+    {
+        List<String> adminsl = Arrays.asList(getConfig().getProperty("BOT-ADMINS").split(" "));
+        boolean hostmatch = false;
+        boolean nickmatch = false;
+        String nick;
+        String hostname;
+        for (String host : adminsl)
+        {
+            nick = host.split("\\@")[0];
+            hostname = host.split("\\@")[1];
+            Pattern p = Pattern.compile(hostname.replaceAll("\\.", "\\\\.").replaceAll("\\*", ".*"));
+            Matcher m = p.matcher(hostmask);
+            if (m.find())
+            {
+                hostmatch = true;
+            }
+            p = Pattern.compile(nick.replaceAll("\\*", ".*"));
+            m = p.matcher(nick);
+            if (m.find())
+            {
+                nickmatch = true;
+            }
+        }
+        return nickmatch && hostmatch;
     }
 }

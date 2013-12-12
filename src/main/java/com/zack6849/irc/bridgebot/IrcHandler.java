@@ -14,12 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package com.zack6849.irc.bridgebot;
 
 import java.util.Properties;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.pircbotx.Colors;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ActionEvent;
 import org.pircbotx.hooks.events.JoinEvent;
@@ -42,8 +42,35 @@ public class IrcHandler extends ListenerAdapter
         String username = event.getUser().getNick();
         String channel = event.getChannel().getName();
         String message = event.getMessage();
-        String format = config.getProperty("IRC-CHAT-FORMAT").replaceAll("%USER%", username).replaceAll("%CHANNEL%", channel).replaceAll("%MESSAGE%", message);
+        String format = config.getProperty("IRC-CHAT-FORMAT").replace("%USER%", username).replace("%CHANNEL%", channel).replace("%MESSAGE%", message);
         Bukkit.broadcastMessage(Utils.irccolorize(ChatColor.translateAlternateColorCodes('&', format)));
+        if (event.getMessage().startsWith(Bot.config.getBotPrefix()))
+        {
+            String[] args = event.getMessage().split(" ");
+            String command = args[0].substring(1);
+            if (!command.isEmpty())
+            {
+                if (command.equalsIgnoreCase("players"))
+                {
+                   event.getChannel().send().message(Utils.bukkitcolorize(BukkitHandler.getPlayerList()));
+                }
+                if (command.startsWith("command"))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 1; i < args.length; i++)
+                    {
+                        sb.append(args[i]).append(" ");
+                    }
+                    if (Bot.config.isAdmin(event.getUser().getNick(), event.getUser().getHostmask()))
+                    {
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), sb.toString().trim());
+                    } else
+                    {
+                       event.getChannel().send().message(Colors.RED + "You don't have permission to do that!");
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -52,7 +79,7 @@ public class IrcHandler extends ListenerAdapter
         String channel = event.getChannel().getName();
         String username = event.getUser().getNick();
         String reason = event.getReason().isEmpty() ? "No Reason specified" : event.getReason();
-        String format = config.getProperty("IRC-PART-FORMAT").replaceAll("%USER%", username).replaceAll("%CHANNEL%", channel).replaceAll("%REASON%", reason);
+        String format = config.getProperty("IRC-PART-FORMAT").replace("%USER%", username).replace("%CHANNEL%", channel).replace("%REASON%", reason);
         Bukkit.broadcastMessage(Utils.irccolorize(ChatColor.translateAlternateColorCodes('&', format)));
     }
 
@@ -61,7 +88,7 @@ public class IrcHandler extends ListenerAdapter
     {
         String channel = event.getChannel().getName();
         String username = event.getUser().getNick();
-        String format = config.getProperty("IRC-JOIN-FORMAT").replaceAll("%USER%", username).replaceAll("%CHANNEL%", channel);
+        String format = config.getProperty("IRC-JOIN-FORMAT").replace("%USER%", username).replace("%CHANNEL%", channel);
         Bukkit.broadcastMessage(Utils.irccolorize(ChatColor.translateAlternateColorCodes('&', format)));
     }
 
@@ -71,7 +98,7 @@ public class IrcHandler extends ListenerAdapter
         String channel = event.getChannel().getName();
         String username = event.getUser().getNick();
         String action = event.getMessage();
-        String format = config.getProperty("IRC-ACTION-FORMAT").replaceAll("%USER%", username).replaceAll("%CHANNEL%", channel).replaceAll("%ACTION%", action);
+        String format = config.getProperty("IRC-ACTION-FORMAT").replace("%USER%", username).replace("%CHANNEL%", channel).replace("%ACTION%", action);
         Bukkit.broadcastMessage(Utils.irccolorize(ChatColor.translateAlternateColorCodes('&', format)));
     }
 
@@ -80,9 +107,9 @@ public class IrcHandler extends ListenerAdapter
     {
         String channel = event.getChannel().getName();
         String kicked = event.getRecipient().getNick();
-        String kicker = event.getSource().getNick();
+        String kicker = event.getUser().getNick();
         String reason = event.getReason().isEmpty() ? "No Reason specified" : event.getReason();
-        String format = config.getProperty("IRC-KICK-FORMAT").replaceAll("%KICKED%", kicked).replaceAll("%KICKER%", kicker).replaceAll("%REASON%", reason).replaceAll("%CHANNEL%", channel);
+        String format = config.getProperty("IRC-KICK-FORMAT").replace("%KICKED%", kicked).replace("%KICKER%", kicker).replace("%REASON%", reason).replace("%CHANNEL%", channel);
         Bukkit.broadcastMessage(Utils.irccolorize(ChatColor.translateAlternateColorCodes('&', format)));
     }
 }

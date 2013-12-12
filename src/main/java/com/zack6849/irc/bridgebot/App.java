@@ -21,15 +21,25 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 public class App extends JavaPlugin
 {
-
+    /*
+     *  TO-DO list
+     * Irc commands
+     * 1. player list
+     * 2. execute server command
+     */
     public static Plugin app;
 
     @Override
     public void onEnable()
     {
-        Bot.start();
         App.app = this;
-        getServer().getPluginManager().registerEvents(new BukkitHandler(this), this);
+        new Thread(new Runnable()
+        {
+            public void run()
+            {
+                Bot bot = new Bot();
+            }
+        }).start();
     }
 
     @Override
